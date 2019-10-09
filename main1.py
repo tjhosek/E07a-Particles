@@ -14,12 +14,12 @@ SCREEN_HEIGHT = 600
 MARGIN = 30
 SCREEN_TITLE = "Particle Exercise"
 
-PARTICLE_MIN_SCALE = 0.01
+PARTICLE_MIN_SCALE = 0.07
 PARTICLE_MAX_SCALE = 0.08
 PARTICLE_MIN_X = -20
 PARTICLE_MAX_X = 20
 PARTICLE_VELOCITY_X = 0
-PARTICLE_VELOCITY_Y = 4
+PARTICLE_VELOCITY_Y = -4
 PARTICLE_MIN_AX = -0.1
 PARTICLE_MAX_AX = 0.1
 PARTICLE_MIN_AY = -0.1
@@ -27,9 +27,12 @@ PARTICLE_MAX_AY = 0.1
 PARTICLE_MIN_DECAY = 0.001
 PARTICLE_MAX_DECAY = 0.01
 
+CLOUD_DELAY = 15
+CLOUD_COUNTER = 0
+
 
 class Particle(arcade.Sprite):
-    def __init__(self, asset, scale, x, y, dx, dy, ax, ay, decay):
+    def __init__(self, asset, scale, x, y, dx, dy, ax, ay, decay, partType):
         super().__init__("assets/{}.png".format(asset), scale)
         self.center_x = x
         self.center_y = y
@@ -39,20 +42,16 @@ class Particle(arcade.Sprite):
         self.ay = ay
         self.decay = decay
         self.color_pos = 0
-
-        self.particle_colors = [
-            (open_color.red_5, 4)
-            ,(open_color.red_4, 5)
-            ,(open_color.red_3, 6)
-            ,(open_color.red_2, 7)
-            ,(open_color.red_1, 8)
-            ,(open_color.teal_1, 8)
-            ,(open_color.teal_2, 7)
-            ,(open_color.teal_3, 6)
-            ,(open_color.teal_4, 5)
-            ,(open_color.teal_5, 4)
-        ]
-        (self.color, self.lifetime) = self.particle_colors[self.color_pos]
+        if partType == 0:
+            self.particle_colors = [
+                (random.choice(open_color.blues),5)
+            ]
+            (self.color, self.lifetime) = self.particle_colors[self.color_pos]
+        elif partType == 1:
+            self.particle_colors = [
+                (random.choice(open_color.grays),5)
+            ]
+            (self.color, self.lifetime) = self.particle_colors[self.color_pos]
         self.alive = True
         
     
@@ -98,19 +97,37 @@ class Window(arcade.Window):
         pass
 
     def update(self, delta_time):
+        global CLOUD_COUNTER
         self.particle_list.update()
         if self.mouse_down:
+            #Generate a cloud
+            if CLOUD_COUNTER >= CLOUD_DELAY:
+                CLOUD_COUNTER = 0
+                x = self.x + random.uniform(PARTICLE_MIN_X,PARTICLE_MAX_X)
+                y = self.y + random.uniform(.5,-.5)
+                dx = random.uniform(.05,-.05)
+                dy = random.uniform(.05,-.05)
+                ax = 0
+                ay = 0
+                decay = 0
+                scale = random.uniform(PARTICLE_MIN_SCALE,PARTICLE_MAX_SCALE)
+                particle = Particle('smoke_02',scale,x,y,dx,dy,ax,ay,decay,1)
+
+                self.particle_list.append(particle)
+            else:
+                CLOUD_COUNTER += 1
+
             #generate a new particle
             x = self.x + random.uniform(PARTICLE_MIN_X, PARTICLE_MAX_X)
             y = self.y
             dx = PARTICLE_VELOCITY_X
             dy = PARTICLE_VELOCITY_Y
             ax = random.uniform(PARTICLE_MIN_AX,PARTICLE_MAX_AX)
-            ay = random.uniform(PARTICLE_MIN_AY,PARTICLE_MAX_AY)
-            decay = random.uniform(PARTICLE_MIN_DECAY,PARTICLE_MAX_DECAY)
-            scale = random.uniform(PARTICLE_MIN_SCALE,PARTICLE_MAX_SCALE)
+            ay = -.5
+            decay = .02
+            scale = .001
             #Particle(asset, sprite scale, initial position [x], initial position [y], velocity [x], velocity [y], acceleration [x], acceleration [y], scale decay)
-            particle = Particle('circle_05',scale,x,y,dx,dy,ax,ay,decay)
+            particle = Particle('trace_07',scale,x,y,dx,dy,ax,ay,decay,0)
 
             self.particle_list.append(particle)
 
